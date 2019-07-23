@@ -24,11 +24,9 @@ import java.util.*;
 
 @SpringBootApplication
 public class AxonApplication {
-
     public static void main(String[] args) {
         SpringApplication.run(AxonApplication.class, args);
     }
-
 }
 
 @AllArgsConstructor

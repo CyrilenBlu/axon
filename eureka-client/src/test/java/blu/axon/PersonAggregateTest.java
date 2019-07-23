@@ -6,8 +6,6 @@ import org.junit.Test;
 
 import java.util.UUID;
 
-import static org.junit.Assert.*;
-
 public class PersonAggregateTest {
 
     AggregateTestFixture fixture;

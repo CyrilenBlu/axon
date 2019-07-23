@@ -1,5 +1,6 @@
 package blu.axon;
 
+import com.netflix.discovery.EurekaClient;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.axonframework.commandhandling.CommandHandler;
@@ -12,17 +13,18 @@ import org.axonframework.queryhandling.QueryGateway;
 import org.axonframework.queryhandling.QueryHandler;
 import org.axonframework.queryhandling.responsetypes.ResponseTypes;
 import org.axonframework.spring.stereotype.Aggregate;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
 @SpringBootApplication
+@EnableEurekaClient
 public class AxonApplication {
     public static void main(String[] args) {
         SpringApplication.run(AxonApplication.class, args);
@@ -90,12 +92,18 @@ class PersonEventHandler {
 
 class FindAllPeopleQuery { }
 
-@AllArgsConstructor
 @RestController
 class PersonEndpoint {
 
+    private final EurekaClient eurekaClient;
     private final CommandGateway commandGateway;
     private final QueryGateway queryGateway;
+
+    public PersonEndpoint(@Qualifier("eurekaClient") EurekaClient eurekaClient, CommandGateway commandGateway, QueryGateway queryGateway) {
+        this.eurekaClient = eurekaClient;
+        this.commandGateway = commandGateway;
+        this.queryGateway = queryGateway;
+    }
 
     @GetMapping("/people")
     public List<Person> findAllPeople() {
@@ -107,5 +115,13 @@ class PersonEndpoint {
     public void payBills(@PathVariable String name) {
         String userId = UUID.randomUUID().toString();
         commandGateway.send(new BillPayedCommand(userId, name));
+    }
+
+    @Value("${spring.application.name}")
+    private String appName;
+
+    @RequestMapping("/greeting")
+    public String greeting() {
+        return String.format("Hello from '%s'", eurekaClient.getApplication(appName).getName());
     }
 }
